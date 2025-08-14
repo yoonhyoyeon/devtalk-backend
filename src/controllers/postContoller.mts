@@ -6,27 +6,15 @@ export const postController = {
     // 게시글 목록 조회
     getList: async(req: Request, res: Response) => {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const sortBy = (req.query.sortBy as string) || 'createdAt';
-            const order = req.query.order === 'asc' ? 1 : -1;
-            const search = req.query.search as string;
+            const { page, limit, sortBy, order, search } = req.validatedQuery;
 
-            const query = search ?
-            {
-                $or: [
-                    { title: { $regex: search, $options: 'i'} },
-                    { content: { $regex: search, $options: 'i'} }
-                ]
-            } : {};
-
-            const posts = await Post.find(query)
+            const posts = await Post.find(search)
             .select('title category views createdAt') // 본문 제외
             .sort({ [sortBy] : order }) // 정렬 (-1: 내림차순(desc), 1: 오름차순(asc))
             .skip((page-1) * limit) // 건너뛸 문서 수
             .limit(limit);
 
-            const total = await Post.countDocuments(query); // 컬렉션의 전체 문서 수 반환
+            const total = await Post.countDocuments(search); // 컬렉션의 전체 문서 수 반환
 
             return res.status(200).json({ 
                 data: posts,
