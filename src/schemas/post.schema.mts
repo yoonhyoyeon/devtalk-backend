@@ -56,5 +56,8 @@ export const GetPostsQuerySchema = z.object({
                 { title: { $regex: val, $options: 'i'} },
                 { content: { $regex: val, $options: 'i'} }
             ]
-        }))
+        })),
+    category: z.enum(['자유', '질문', '취업', '스터디'], '올바른 카테고리를 선택해주세요.')
+        .optional()
+        .transform((val) => val ? { category: val} : {})
 }).strict();
