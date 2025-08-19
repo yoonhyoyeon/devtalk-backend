@@ -4,17 +4,32 @@ import jwt from 'jsonwebtoken';
 import type { SignOptions } from 'jsonwebtoken';
 import User from '../models/user.mjs';
 import { ERROR_TYPES } from '../constants/errorTypes.mjs';
+import { parseTimeToMs } from '../utils/parseToMs.mjs';
 
-const signToken = (userId: string) => {
+type TokenType = 'access' | 'refresh';
+
+const signToken = (userId:string, type:TokenType) => {
     const jwt_secret = process.env.JWT_SECRET;
-    const jwt_expires_in = process.env.JWT_EXPIRES_IN;
+    const jwt_expires_in_refresh = process.env.JWT_EXPIRES_IN_REFRESH;
+    const jwt_expires_in_access = process.env.JWT_EXPIRES_IN_ACCESS
+
     if(!jwt_secret) {
         throw new Error('JWT_SECRET is not defined');
     }
+
+    const config = {
+        access: {
+            expiresIn: jwt_expires_in_access || '1h'
+        },
+        refresh: {
+            expiresIn: jwt_expires_in_refresh || '7d'
+        }
+    };
+
     return jwt.sign(
         { sub: userId },
         jwt_secret,
-        { expiresIn: jwt_expires_in || '7d' } as SignOptions
+        { ...config[type] } as SignOptions
     );
 };
 
@@ -41,14 +56,22 @@ export const authController = {
             const user = await User.create({ email, password: hash, name });
 
             // 토큰 생성 및 응답
-            const token = signToken(user._id.toString());
+            const refreshToken = signToken(user._id.toString(), 'refresh');
+            const accessToken = signToken(user._id.toString(), 'access');
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: parseTimeToMs(process.env.JWT_EXPIRES_IN_REFRESH || '7d')
+            })
 
             return res.status(201).json({
                 data: {
                     _id: user._id,
                     email: user.email,
                     name: user.name,
-                    token
+                    accessToken
                 }
             });
         } catch(error) {

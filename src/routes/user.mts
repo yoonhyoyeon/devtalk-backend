@@ -9,3 +9,4 @@ const Router = express.Router();
 Router.get('/signup', validate('body', SignupSchema), authController.signup);
 
 // 로그인 (POST /api/auth/login)
+
