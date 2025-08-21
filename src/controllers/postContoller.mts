@@ -43,7 +43,9 @@ export const postController = {
             const post = new Post(req.body);
             await post.save();
             // const post = await Post.create(result.data); 위 두줄은 이 한줄과 같음.
-            return res.status(201).json(post);
+            return res.status(201).json({
+                data: post
+            });
         } catch(error) {
             return res.status(500).json({ message: '서버 에러', type: ERROR_TYPES.INTERNAL_SERVER_ERROR});
         }
@@ -56,7 +58,9 @@ export const postController = {
             if(!post) {
                 return res.status(404).json({ message: '게시글을 찾을 수 없습니다', type: ERROR_TYPES.NOT_FOUND });
             }
-            return res.status(200).json(post);
+            return res.status(200).json({
+                data: post
+            });
         } catch(error) {
             return res.status(500).json({ message: '서버 에러', type: ERROR_TYPES.INTERNAL_SERVER_ERROR});
         }
@@ -73,7 +77,9 @@ export const postController = {
             if(!post) {
                 return res.status(404).json({ message: '게시글을 찾을 수 없습니다', type: ERROR_TYPES.NOT_FOUND });
             }
-            return res.status(200).json(post);
+            return res.status(200).json({
+                data: post
+            });
         } catch(error) {
             return res.status(500).json({ message: '서버 에러', type: ERROR_TYPES.INTERNAL_SERVER_ERROR });
         }

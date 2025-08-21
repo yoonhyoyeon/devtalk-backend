@@ -82,6 +82,48 @@ export const authController = {
         }
     },
     login: async (req:Request, res:Response) => {
+        try {
+            const { email, password } = req.body;
 
+            const user = await User.findOne({ email });
+            if(!user) {
+                return res.status(401).json({
+                    message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+                    type: ERROR_TYPES.VALIDATION_ERROR
+                });
+            }
+
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if(!isValidPassword) {
+                return res.status(401).json({
+                    message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+                    type: ERROR_TYPES.VALIDATION_ERROR
+                });
+            }
+
+            const accessToken = signToken(user._id.toString(), 'access');
+            const refreshToken = signToken(user._id.toString(), 'refresh');
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: parseTimeToMs(process.env.JWT_EXPIRES_IN_REFRESH || '7d')
+            });
+
+            return res.status(200).json({
+                data: {
+                    _id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    accessToken
+                }
+            });
+        } catch(error) {
+            return res.status(500).json({
+                message: '서버 에러',
+                type: ERROR_TYPES.INTERNAL_SERVER_ERROR
+            })
+        }
     }
 }

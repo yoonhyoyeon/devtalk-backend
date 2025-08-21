@@ -3,7 +3,7 @@ import type { Express, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import postRouter from './routes/posts.mjs';
-
+import authRouter from './routes/auth.mjs';
 
 dotenv.config();
 
@@ -17,6 +17,7 @@ mongoose.connect(process.env.MONGO_URI as string)
 
 // 게시글 라우터 연결
 app.use('/api/posts', postRouter);
+app.use('/api/auth', authRouter);
 
 // 테스트 라우터
 app.get('/', (req:Request, res:Response) => {
