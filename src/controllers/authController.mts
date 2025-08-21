@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import type { SignOptions } from 'jsonwebtoken';
+import type { JwtPayload, SignOptions } from 'jsonwebtoken';
 import User from '../models/user.mjs';
 import { ERROR_TYPES } from '../constants/errorTypes.mjs';
 import { parseTimeToMs } from '../utils/parseToMs.mjs';
@@ -124,6 +124,57 @@ export const authController = {
                 message: '서버 에러',
                 type: ERROR_TYPES.INTERNAL_SERVER_ERROR
             })
+        }
+    },
+    refresh: async (req:Request, res:Response) => {
+        try {
+            const jwt_secret = process.env.JWT_SECRET;
+
+            if(!jwt_secret) {
+                throw new Error('JWT_SECRET is not defined');
+            }
+            
+            const { refreshToken } = req.cookies;
+
+            if(!refreshToken) {
+                return res.status(401).json({
+                    message: 'Refresh Token이 없습니다.',
+                    type: ERROR_TYPES.UNAUTHORIZED
+                });
+            }
+            const decoded = jwt.verify(refreshToken, jwt_secret);
+            //decoded <- { sub: '68a6b48e7f00eb8246c63344', iat: 1755763870, exp: 1756368670 }
+            
+            const accessToken = signToken(decoded.sub as string, 'access');
+
+            return res.status(200).json({
+                data: { 
+                    accessToken 
+                }
+            });
+        } catch(error) {
+            if(error instanceof Error && error.message === 'JWT_SECRET is not defined') {
+                return res.status(500).json({
+                    message: '서버 설정 오류',
+                    type: ERROR_TYPES.INTERNAL_SERVER_ERROR
+                });
+            }
+            if(error instanceof jwt.TokenExpiredError) {
+                return res.status(401).json({
+                    message: 'Refresh Token이 만료되었습니다',
+                    type: ERROR_TYPES.EXPIRED_TOKEN
+                });
+            }
+            if(error instanceof jwt.JsonWebTokenError) {
+                return res.status(401).json({
+                    message: '유효하지 않은 Refresh Token입니다',
+                    type: ERROR_TYPES.INVALID_TOKEN
+                });
+            }
+            return res.status(500).json({
+                message: '서버 에러',
+                type: ERROR_TYPES.INTERNAL_SERVER_ERROR
+            });
         }
     }
 }

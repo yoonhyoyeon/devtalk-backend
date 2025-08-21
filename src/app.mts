@@ -1,5 +1,6 @@
 import express from 'express';
 import type { Express, Request, Response } from 'express';
+import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import postRouter from './routes/posts.mjs';
@@ -9,6 +10,7 @@ dotenv.config();
 
 const app:Express = express();
 app.use(express.json());
+app.use(cookieParser());
 
 // DB 연결
 mongoose.connect(process.env.MONGO_URI as string)
