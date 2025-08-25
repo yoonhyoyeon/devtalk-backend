@@ -105,9 +105,9 @@ export const authController = {
             const refreshToken = signToken(user._id.toString(), 'refresh');
 
             res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                httpOnly: true, //js로 쿠키 접근 X (document.cookie 읽기/수정 불가)
+                secure: process.env.NODE_ENV === 'production', //https 프로토콜에서만 쿠키 전송
+                sameSite: 'strict', //오직 같은 도메인에서만 쿠키 전송
                 maxAge: parseTimeToMs(process.env.JWT_EXPIRES_IN_REFRESH || '7d')
             });
 
@@ -171,6 +171,22 @@ export const authController = {
                     type: ERROR_TYPES.INVALID_TOKEN
                 });
             }
+            return res.status(500).json({
+                message: '서버 에러',
+                type: ERROR_TYPES.INTERNAL_SERVER_ERROR
+            });
+        }
+    },
+    logout: async (req:Request, res:Response) => {
+        try {
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            });
+
+            return res.sendStatus(204);
+        } catch(error) {
             return res.status(500).json({
                 message: '서버 에러',
                 type: ERROR_TYPES.INTERNAL_SERVER_ERROR
