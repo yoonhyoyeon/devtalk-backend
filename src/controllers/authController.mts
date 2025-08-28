@@ -88,16 +88,18 @@ export const authController = {
             const user = await User.findOne({ email });
             if(!user) {
                 return res.status(401).json({
-                    message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-                    type: ERROR_TYPES.VALIDATION_ERROR
+                    message: '존재하지 않는 계정 입니다',
+                    type: ERROR_TYPES.UNAUTHORIZED,
+                    code: 'USER_NOT_FOUND'
                 });
             }
 
             const isValidPassword = await bcrypt.compare(password, user.password);
             if(!isValidPassword) {
                 return res.status(401).json({
-                    message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-                    type: ERROR_TYPES.VALIDATION_ERROR
+                    message: '비밀번호가 올바르지 않습니다',
+                    type: ERROR_TYPES.UNAUTHORIZED,
+                    code: 'INVALID_PASSWORD'
                 });
             }
 
