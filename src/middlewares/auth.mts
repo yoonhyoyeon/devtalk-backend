@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ERROR_TYPES } from '../constants/errorTypes.mjs';
+import mongoose from 'mongoose';
 
 export const auth = async (req:Request, res:Response, next:NextFunction) => {
     try {
@@ -26,6 +27,13 @@ export const auth = async (req:Request, res:Response, next:NextFunction) => {
         }
 
         const decoded = jwt.verify(token, jwt_secret) as { sub: string };
+        
+        if(!mongoose.Types.ObjectId.isValid(decoded.sub)) {
+            return res.status(401).json({
+                message: '유효하지 않은 토큰입니다',
+                type: ERROR_TYPES.UNAUTHORIZED
+            })
+        }
 
         req.userId = decoded.sub;
 
