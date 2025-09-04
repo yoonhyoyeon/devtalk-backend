@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import type { JwtPayload, SignOptions } from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import User from '../models/user.mjs';
 import { ERROR_TYPES } from '../constants/errorTypes.mjs';
 import { parseTimeToMs } from '../utils/parseToMs.mjs';
